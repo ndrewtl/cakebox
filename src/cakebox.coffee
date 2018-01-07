@@ -8,18 +8,22 @@ write = (filename,data) -> fs.writeFileSync(filename,data)
 class Task
   constructor: (name,options) ->
     @name     = name
-    @items    = options.select().map (filename) -> {
-      filename: filename
-      source: read filename
-    }
-    @pipeline = options.transform()
+    @options  = options
     @output = null
     @updated = null
 
+  items: ->
+    @options.select().map (filename) ->
+      filename: filename
+      source: read filename
+
+  pipeline: ->
+    @options.transform()
+
   run: ->
-    items = @items
+    items = @items()
     # Transform each item through the pipeline
-    for fn in @pipeline
+    for fn in @pipeline()
       items = items.map( (item) -> Object.assign(item, fn.call(item)) )
 
 
