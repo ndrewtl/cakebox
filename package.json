@@ -1,0 +1,15 @@
+{
+  "name": "@andrewtl/cakebox",
+  "version": "0.1.0",
+  "bin": {
+    "cakebox": "bin/cakebox"
+  },
+  "description": "A do-it-yourself build system for javascript",
+  "author": "Andrew Lee",
+  "license": "MIT",
+  "dependencies": {
+    "coffeescript": "^2.1.1",
+    "glob": "^7.1.2",
+    "yargs": "^10.0.3"
+  }
+}
