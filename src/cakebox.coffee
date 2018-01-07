@@ -1,5 +1,4 @@
 fs   = require 'fs'
-util = require 'util'
 
 # Helper methods to read and write from files
 read  = (filename) -> fs.readFileSync(filename).toString()
