@@ -1,9 +1,7 @@
 (function() {
-  var Task, cakebox, fs, read, util, write;
+  var Task, cakebox, fs, read, write;
 
   fs = require('fs');
-
-  util = require('util');
 
   // Helper methods to read and write from files
   read = function(filename) {

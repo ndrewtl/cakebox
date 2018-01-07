@@ -22,10 +22,10 @@ module.exports =
 
     # Get task listing
     tasks = cakebox(config)
-    # For each command specified...
-    for cmd in argv._[2..]
+    # Convert all command-names into tasks to run
+    torun = argv._[2..].map (cmd) ->
       task = tasks[cmd]
-      # Make sure the task exists
       throw "Task #{cmd} not found!" unless task? and task.constructor is cakebox.Task
-      # Run it
-      tasks[cmd].run()
+      task
+
+    task.run() for task in torun # run all
