@@ -1,5 +1,5 @@
 (function() {
-  var cakebox, cs, exists, fs, log, path, yargs;
+  var cakebox, cs, fs, log, path, yargs;
 
   cs = require('coffeescript');
 
@@ -15,29 +15,12 @@
 
   log = console.log; // aliases
 
-  exists = function(filename) {
-    return fs.existsSync(path.resolve(filename));
-  };
-
   module.exports = yargs.usage('$0 [-w|watch] [tasks]').command('$0', 'Run build tasks', ((yargs) => {
     return yargs.boolean('watch').alias('watch', 'w');
   }), (function(argv) {
-    var config, i, j, k, len, len1, len2, name, ref, results, task, tasks;
+    var i, j, len, len1, results, task, tasks;
     // load config
-    config = null;
-    ref = ['cakebox', 'config', 'config.cakebox'];
-    for (i = 0, len = ref.length; i < len; i++) {
-      name = ref[i];
-      if (exists(`${name}.coffee` || exists(`${name}.js`))) {
-        config = require(`../${name}`);
-        break;
-      }
-    }
-    if (config == null) {
-      throw "No config file found";
-    }
-    // load all tasks
-    cakebox.load(config);
+    cakebox.init();
     // Convert all command-names into tasks to run
     tasks = argv._.map(function(cmd) {
       var task;
@@ -51,8 +34,8 @@
       tasks = [cakebox.tasks['default']];
     }
     // run all
-    for (j = 0, len1 = tasks.length; j < len1; j++) {
-      task = tasks[j];
+    for (i = 0, len = tasks.length; i < len; i++) {
+      task = tasks[i];
       // Run tasks
       task.run();
     }
@@ -60,8 +43,8 @@
     // If the watch options are set...
     if (argv.watch) {
       results = [];
-      for (k = 0, len2 = tasks.length; k < len2; k++) {
-        task = tasks[k];
+      for (j = 0, len1 = tasks.length; j < len1; j++) {
+        task = tasks[j];
         results.push(task.watch());
       }
       return results;

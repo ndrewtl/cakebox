@@ -6,7 +6,6 @@ yargs = require 'yargs'
 fs    = require 'fs'
 
 log    = console.log # aliases
-exists = (filename) -> fs.existsSync path.resolve filename
 
 module.exports = yargs
   .usage '$0 [-w|watch] [tasks]'
@@ -14,14 +13,7 @@ module.exports = yargs
     ((yargs) => yargs.boolean('watch').alias('watch','w')),
     ((argv) ->
       # load config
-      config = null
-      for name in ['cakebox','config','config.cakebox']
-        if exists "#{name}.coffee" or exists "#{name}.js"
-          config = require "../#{name}"
-          break
-      throw "No config file found" unless config?
-      # load all tasks
-      cakebox.load(config)
+      cakebox.init()
       # Convert all command-names into tasks to run
       tasks = argv._.map (cmd) ->
         task = cakebox.tasks[cmd]
