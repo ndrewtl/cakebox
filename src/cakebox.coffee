@@ -14,15 +14,32 @@ class Task
     @updated = null
 
   items: ->
-    @options.select().map (filename) ->
-      filename: filename
-      source: read filename
+    if @options.select?
+      @options.select().map (filename) ->
+        filename: filename
+        source: read filename
+    else
+      null
 
   pipeline: ->
-    @options.transform()
+    if @options.transform?
+      @options.transform()
+    else
+      null
+
+  first: ->
+    if @options.first? and @options.first.constructor is Function
+      @options.first()
+    else
+      null
 
   run: ->
+    first = @first()
+    if first?
+      for taskname in first
+        @options.cakebox.tasks[taskname].run()
     items = @items()
+    return unless items?
     log "[#{(new Date()).toTimeString()}] Run task: #{@name.green}"
     # Transform each item through the pipeline
     for fn in @pipeline()
@@ -55,12 +72,14 @@ class Task
       for item in items
         fs.unwatchFile item.filename
 
-
-cakebox = (config) ->
-  result = {}
-  for name, obj of config
-    result[name] = new Task(name, obj)
-  result
+cakebox =
+  tasks: {}
+  load: (config) ->
+    for name, obj of config
+      obj = { first: -> obj } if obj.constructor == Function
+      obj = Object.assign { cakebox: this }, obj
+      @tasks[name] = new Task(name, obj)
+    this
 
 cakebox.Task = Task
 module.exports = cakebox

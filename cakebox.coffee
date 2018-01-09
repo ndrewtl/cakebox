@@ -16,3 +16,5 @@ module.exports =
         destination:
           source: path.join(@dir,@name) + '.js'
     ]
+  'default':
+    first: -> ['coffee']
