@@ -1,5 +1,5 @@
 (function() {
-  var Task, colors, fs, log, read, write;
+  var Task, colors, fs, read, write;
 
   fs = require('fs');
 
@@ -14,12 +14,11 @@
     return fs.writeFileSync(filename, data);
   };
 
-  log = console.log;
-
   module.exports = Task = class Task {
     constructor(options) {
       this.options = options;
       this.name = options.name;
+      this.cakebox = options.cakebox;
       this.output = null;
       this.updated = null;
     }
@@ -59,14 +58,14 @@
       if (tasks != null) {
         for (i = 0, len = tasks.length; i < len; i++) {
           taskname = tasks[i];
-          this.options.cakebox.tasks[taskname].run();
+          this.cakebox.tasks[taskname].run();
         }
       }
       items = this.items();
       if (items == null) {
         return;
       }
-      log(`[${(new Date()).toTimeString()}] Run task: ${this.name.green}`);
+      this.cakebox.log(`Run task: ${this.name.green}`);
       ref = this.pipeline();
       // pipeline each item through the pipeline
       for (j = 0, len1 = ref.length; j < len1; j++) {
@@ -89,6 +88,7 @@
         ref1 = item.destination;
         for (name in ref1) {
           dest = ref1[name];
+          this.cakebox.log(`${this.name.green}: Writing to ${dest.yellow}`);
           write(dest, item[name]);
         }
       }

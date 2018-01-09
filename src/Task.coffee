@@ -5,12 +5,11 @@ colors = require 'colors'
 read  = (filename) -> fs.readFileSync(filename).toString()
 write = (filename,data) -> fs.writeFileSync(filename,data)
 
-log = console.log
-
 module.exports = class Task
   constructor: (options) ->
     @options  = options
     @name = options.name
+    @cakebox = options.cakebox
     @output = null
     @updated = null
 
@@ -38,10 +37,10 @@ module.exports = class Task
     tasks = @tasks()
     if tasks?
       for taskname in tasks
-        @options.cakebox.tasks[taskname].run()
+        @cakebox.tasks[taskname].run()
     items = @items()
     return unless items?
-    log "[#{(new Date()).toTimeString()}] Run task: #{@name.green}"
+    @cakebox.log "Run task: #{@name.green}"
     # pipeline each item through the pipeline
     for fn in @pipeline()
       items = items.map( (item) -> Object.assign(item, fn.call(item)) )
@@ -57,6 +56,7 @@ module.exports = class Task
   save: ->
     for item in @output
       for name, dest of item.destination
+        @cakebox.log "#{@name.green}: Writing to #{dest.yellow}"
         write dest, item[name]
     this
 

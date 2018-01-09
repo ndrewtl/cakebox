@@ -18,6 +18,9 @@
         this.tasks[name] = new Task(obj);
       }
       return this;
+    },
+    log: function(str) {
+      return console.log(`[${(new Date()).toLocaleTimeString()}] ${str}`);
     }
   };
 
