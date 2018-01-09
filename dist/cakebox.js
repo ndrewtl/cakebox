@@ -1,7 +1,9 @@
 (function() {
-  var Task, cakebox, fs, read, write;
+  var Task, cakebox, colors, fs, log, read, write;
 
   fs = require('fs');
+
+  colors = require('colors');
 
   // Helper methods to read and write from files
   read = function(filename) {
@@ -11,6 +13,8 @@
   write = function(filename, data) {
     return fs.writeFileSync(filename, data);
   };
+
+  log = console.log;
 
   Task = class Task {
     constructor(name, options) {
@@ -36,6 +40,7 @@
     run() {
       var fn, i, items, len, ref;
       items = this.items();
+      log(`Running Task: ${this.name.green}`);
       ref = this.pipeline();
       // Transform each item through the pipeline
       for (i = 0, len = ref.length; i < len; i++) {

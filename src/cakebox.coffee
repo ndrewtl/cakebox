@@ -1,8 +1,10 @@
-fs   = require 'fs'
+fs     = require 'fs'
+colors = require 'colors'
 
 # Helper methods to read and write from files
 read  = (filename) -> fs.readFileSync(filename).toString()
 write = (filename,data) -> fs.writeFileSync(filename,data)
+log = console.log
 
 class Task
   constructor: (name,options) ->
@@ -21,6 +23,7 @@ class Task
 
   run: ->
     items = @items()
+    log "Running Task: #{@name.green}"
     # Transform each item through the pipeline
     for fn in @pipeline()
       items = items.map( (item) -> Object.assign(item, fn.call(item)) )

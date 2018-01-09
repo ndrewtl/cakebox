@@ -20,10 +20,10 @@
   };
 
   module.exports = {
-    run: function(args) {
-      var argv, config, i, j, len, len1, name, ref, results, task, tasks, torun;
-      argv = yargs(args).argv; // parse args
-      
+    run: async function(args) {
+      var argv, config, i, interval, j, len, len1, name, ref, results, sleep, task, tasks, torun;
+      // parse args
+      argv = yargs(args).argv;
       // load config
       config = null;
       ref = ['cakebox', 'config', 'config.cakebox'];
@@ -48,13 +48,31 @@
         }
         return task;
       });
-      results = [];
+      log(argv);
       // run all
       for (j = 0, len1 = torun.length; j < len1; j++) {
         task = torun[j];
-        results.push(task.run());
+        // Run tasks
+        task.run();
       }
-      return results;
+      
+      // If the watch options are set...
+      if (argv.watch || argv.w) {
+        //  sleep function
+        sleep = function(ms) {
+          return new Promise(function(resolve) {
+            return setTimeout(resolve, ms);
+          });
+        };
+        interval = 250; // time to wait, in ms
+        // this loop runs every interval ms and watches
+        results = [];
+        while (true) {
+          1;
+          results.push((await sleep(interval)));
+        }
+        return results;
+      }
     }
   };
 

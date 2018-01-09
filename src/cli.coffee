@@ -10,7 +10,8 @@ exists = (filename) -> fs.existsSync path.resolve filename
 
 module.exports =
   run: (args) ->
-    argv = yargs(args).argv # parse args
+    # parse args
+    argv = yargs(args).argv
 
     # load config
     config = null
@@ -27,5 +28,16 @@ module.exports =
       task = tasks[cmd]
       throw "Task #{cmd} not found!" unless task? and task.constructor is cakebox.Task
       task
-
+    log argv
+    # Run tasks
     task.run() for task in torun # run all
+
+    # If the watch options are set...
+    if argv.watch or argv.w
+      #  sleep function
+      sleep = (ms) -> new Promise((resolve) -> setTimeout(resolve, ms))
+
+      interval = 250 # time to wait, in ms
+      loop # this loop runs every interval ms and watches
+        1
+        await sleep interval
