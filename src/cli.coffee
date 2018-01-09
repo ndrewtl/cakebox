@@ -20,24 +20,22 @@ module.exports = yargs
           config = require "../#{name}"
           break
       throw "No config file found" unless config?
-      # Get task listing
-      tasks = cakebox(config)
+      # Get all tasks
+      all = cakebox(config)
       # Convert all command-names into tasks to run
-      torun = argv._.map (cmd) ->
-        task = tasks[cmd]
+      tasks = argv._.map (cmd) ->
+        task = all[cmd]
         throw "Task #{cmd} not found!" unless task? and task.constructor is cakebox.Task
         task
+      tasks = (task for name, task of all unless tasks.length > 0)
+
       # Run tasks
-      task.run() for task in torun # run all
+      task.run() for task in tasks # run all
 
       # If the watch options are set...
       if argv.watch
-        #  sleep function
-        sleep = (ms) -> new Promise((resolve) -> setTimeout(resolve, ms))
-
-        interval = 250 # time to wait, in ms
-        loop # this loop runs every interval ms and watches
-          1
-          await sleep interval)
-
+        for task in tasks
+          task.watch()
+    )
   .help()
+  .alias 'help', 'h'

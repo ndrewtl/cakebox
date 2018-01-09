@@ -23,7 +23,7 @@ class Task
 
   run: ->
     items = @items()
-    log "Running Task: #{@name.green}"
+    log "[#{(new Date()).toTimeString()}] Run task: #{@name.green}"
     # Transform each item through the pipeline
     for fn in @pipeline()
       items = items.map( (item) -> Object.assign(item, fn.call(item)) )
@@ -41,6 +41,19 @@ class Task
       for name, dest of item.destination
         write dest, item[name]
     this
+
+  watch: ->
+    #  sleep function
+    sleep = (ms) -> new Promise((resolve) -> setTimeout(resolve, ms))
+    interval = 5 * 1000 # time to wait, in ms --> this loop is used to detect new files / removal of old ones
+    loop # this loop runs every interval ms and watches
+      items = @items()
+      for item in items
+        fs.watchFile item.filename, (curr,prev) =>
+          @run()
+      await sleep interval
+      for item in items
+        fs.unwatchFile item.filename
 
 
 cakebox = (config) ->

@@ -22,8 +22,8 @@
 
   module.exports = yargs.usage('$0 [tasks]').command('$0', 'build', ((yargs) => {
     return yargs.boolean('watch').alias('watch', 'w');
-  }), (async function(argv) {
-    var config, i, interval, j, len, len1, name, ref, results, sleep, task, tasks, torun;
+  }), (function(argv) {
+    var all, config, i, j, k, len, len1, len2, name, ref, results, task, tasks;
     // load config
     config = null;
     ref = ['cakebox', 'config', 'config.cakebox'];
@@ -37,52 +37,44 @@
     if (config == null) {
       throw "No config file found";
     }
-    // Get task listing
-    tasks = cakebox(config);
+    // Get all tasks
+    all = cakebox(config);
     // Convert all command-names into tasks to run
-    torun = argv._.map(function(cmd) {
+    tasks = argv._.map(function(cmd) {
       var task;
-      task = tasks[cmd];
+      task = all[cmd];
       if (!((task != null) && task.constructor === cakebox.Task)) {
         throw `Task ${cmd} not found!`;
       }
       return task;
     });
-    log(argv);
+    tasks = ((function() {
+      var results;
+      if (!(tasks.length > 0)) {
+        results = [];
+        for (name in all) {
+          task = all[name];
+          results.push(task);
+        }
+        return results;
+      }
+    })());
     // run all
-    for (j = 0, len1 = torun.length; j < len1; j++) {
-      task = torun[j];
+    for (j = 0, len1 = tasks.length; j < len1; j++) {
+      task = tasks[j];
       // Run tasks
       task.run();
     }
     
     // If the watch options are set...
     if (argv.watch) {
-      //  sleep function
-      sleep = function(ms) {
-        return new Promise(function(resolve) {
-          return setTimeout(resolve, ms);
-        });
-      };
-      interval = 250; // time to wait, in ms
-      // this loop runs every interval ms and watches
       results = [];
-      while (true) {
-        1;
-        results.push((await sleep(interval)));
+      for (k = 0, len2 = tasks.length; k < len2; k++) {
+        task = tasks[k];
+        results.push(task.watch());
       }
       return results;
     }
-  })).help();
-
-  require('yargs').usage('$0 <cmd> [args]').command('hello [name]', 'welcome ter yargs!', (yargs) => {
-    return yargs.positional('name', {
-      type: 'string',
-      default: 'Cambi',
-      describe: 'the name to say hello to'
-    });
-  }, function(argv) {
-    return console.log('hello', argv.name, 'welcome to yargs!');
-  }).help().argv;
+  })).help().alias('help', 'h');
 
 }).call(this);

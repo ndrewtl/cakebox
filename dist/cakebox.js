@@ -41,7 +41,7 @@
     run() {
       var fn, i, items, len, ref;
       items = this.items();
-      log(`Running Task: ${this.name.green}`);
+      log(`[${(new Date()).toTimeString()}] Run task: ${this.name.green}`);
       ref = this.pipeline();
       // Transform each item through the pipeline
       for (i = 0, len = ref.length; i < len; i++) {
@@ -68,6 +68,39 @@
         }
       }
       return this;
+    }
+
+    async watch() {
+      var i, interval, item, items, len, results, sleep;
+      //  sleep function
+      sleep = function(ms) {
+        return new Promise(function(resolve) {
+          return setTimeout(resolve, ms);
+        });
+      };
+      interval = 5 * 1000; // time to wait, in ms --> this loop is used to detect new files / removal of old ones
+      // this loop runs every interval ms and watches
+      results = [];
+      while (true) {
+        items = this.items();
+        for (i = 0, len = items.length; i < len; i++) {
+          item = items[i];
+          fs.watchFile(item.filename, (curr, prev) => {
+            return this.run();
+          });
+        }
+        await sleep(interval);
+        results.push((function() {
+          var j, len1, results1;
+          results1 = [];
+          for (j = 0, len1 = items.length; j < len1; j++) {
+            item = items[j];
+            results1.push(fs.unwatchFile(item.filename));
+          }
+          return results1;
+        })());
+      }
+      return results;
     }
 
   };
