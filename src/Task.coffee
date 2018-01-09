@@ -21,8 +21,8 @@ module.exports = class Task
     return null unless obj?
     if obj.constructor is Function then obj() else obj
 
-  select: ->
-    @get('select').map (filename) -> filename: filename, source: read filename
+  items: ->
+    @get('files').map (filename) -> filename: filename, source: read filename
 
   run: ->
 
@@ -34,7 +34,7 @@ module.exports = class Task
 
     @cakebox.log "Run task: #{@name.green}"
 
-    items = @select()
+    items = @items()
     return if items is null
 
     pipeline = @get 'pipeline'
@@ -62,11 +62,27 @@ module.exports = class Task
     #  sleep function
     sleep = (ms) -> new Promise((resolve) -> setTimeout(resolve, ms))
     interval = 5 * 1000 # time to wait, in ms --> this loop is used to detect new files / removal of old ones
-    loop # this loop runs every interval ms and watches
-      items = @select()
-      for item in items
-        fs.watchFile item.filename, (curr,prev) =>
-          @run()
+    # utility to check if two arrays have the same contents, not necessarily in the same order
+    sameContents = (arr1,arr2) ->
+      return false unless arr1.length == arr2.length
+      for elt in arr1
+        return false unless arr2.includes elt
+      true
+    # Init files to use
+    current = @get 'files'
+
+    # Watch all those files
+    for filename in current
+      fs.watchFile filename, (curr,prev) => @run()
+
+    loop # this loop runs every interval ms and watches for new/removed files
       await sleep interval
-      for item in items
-        fs.unwatchFile item.filename
+      updated = @get 'files' # update our file listing
+      # If the listing isn't the same...
+      unless sameContents updated, current
+        @run() # rebuild
+        for filename in current # remove all our listeners
+          fs.unwatchFile filename
+        for filename in updated # re-add new listeners
+          fs.watchFile filename, => @run()
+        current = updated

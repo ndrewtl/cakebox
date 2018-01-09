@@ -4,7 +4,7 @@ glob   = require 'glob'
 
 module.exports =
   'coffee':
-    select: glob.sync './src/**/*.coffee'
+    files: -> glob.sync './src/**/*.coffee'
     pipeline: [
       -> # Get dir and name values to use later
         {dir, name} = path.parse @filename

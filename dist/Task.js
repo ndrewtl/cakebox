@@ -39,8 +39,8 @@
       }
     }
 
-    select() {
-      return this.get('select').map(function(filename) {
+    items() {
+      return this.get('files').map(function(filename) {
         return {
           filename: filename,
           source: read(filename)
@@ -59,7 +59,7 @@
         }
       }
       this.cakebox.log(`Run task: ${this.name.green}`);
-      items = this.select();
+      items = this.items();
       if (items === null) {
         return;
       }
@@ -96,7 +96,7 @@
     }
 
     async watch() {
-      var i, interval, item, items, len, results, sleep;
+      var current, filename, i, interval, j, k, len, len1, len2, results, sameContents, sleep, updated;
       //  sleep function
       sleep = function(ms) {
         return new Promise(function(resolve) {
@@ -104,26 +104,52 @@
         });
       };
       interval = 5 * 1000; // time to wait, in ms --> this loop is used to detect new files / removal of old ones
-      // this loop runs every interval ms and watches
+      // utility to check if two arrays have the same contents, not necessarily in the same order
+      sameContents = function(arr1, arr2) {
+        var elt, i, len;
+        if (arr1.length !== arr2.length) {
+          return false;
+        }
+        for (i = 0, len = arr1.length; i < len; i++) {
+          elt = arr1[i];
+          if (!arr2.includes(elt)) {
+            return false;
+          }
+        }
+        return true;
+      };
+      // Init files to use
+      current = this.get('files');
+      // Watch all those files
+      for (i = 0, len = current.length; i < len; i++) {
+        filename = current[i];
+        fs.watchFile(filename, (curr, prev) => {
+          return this.run(); // this loop runs every interval ms and watches for new/removed files
+        });
+      }
       results = [];
       while (true) {
-        items = this.select();
-        for (i = 0, len = items.length; i < len; i++) {
-          item = items[i];
-          fs.watchFile(item.filename, (curr, prev) => {
-            return this.run();
-          });
-        }
         await sleep(interval);
-        results.push((function() {
-          var j, len1, results1;
-          results1 = [];
-          for (j = 0, len1 = items.length; j < len1; j++) {
-            item = items[j];
-            results1.push(fs.unwatchFile(item.filename));
+        updated = this.get('files'); // update our file listing
+        // If the listing isn't the same...
+        if (!sameContents(updated, current)) {
+          this.run(); // rebuild
+          // remove all our listeners
+          for (j = 0, len1 = current.length; j < len1; j++) {
+            filename = current[j];
+            fs.unwatchFile(filename);
           }
-          return results1;
-        })());
+          // re-add new listeners
+          for (k = 0, len2 = updated.length; k < len2; k++) {
+            filename = updated[k];
+            fs.watchFile(filename, () => {
+              return this.run();
+            });
+          }
+          results.push(current = updated);
+        } else {
+          results.push(void 0);
+        }
       }
       return results;
     }
