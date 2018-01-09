@@ -16,7 +16,7 @@ module.exports = yargs
       # load config
       config = null
       for name in ['cakebox','config','config.cakebox']
-        if exists "#{name}.coffee"
+        if exists "#{name}.coffee" or exists "#{name}.js"
           config = require "../#{name}"
           break
       throw "No config file found" unless config?

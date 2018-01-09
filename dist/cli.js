@@ -28,7 +28,7 @@
     ref = ['cakebox', 'config', 'config.cakebox'];
     for (i = 0, len = ref.length; i < len; i++) {
       name = ref[i];
-      if (exists(`${name}.coffee`)) {
+      if (exists(`${name}.coffee` || exists(`${name}.js`))) {
         config = require(`../${name}`);
         break;
       }

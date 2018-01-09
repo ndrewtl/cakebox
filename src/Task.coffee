@@ -13,36 +13,34 @@ module.exports = class Task
     @output = null
     @updated = null
 
-  items: ->
-    if @options.select?
-      @options.select().map (filename) ->
-        filename: filename
-        source: read filename
-    else
-      null
+  # function to get the value of the specified key
+  # if the key is undefined or null, return null
+  # if it's a function, invoke it. If not, return it as-is
+  get: (key) ->
+    obj = @options[key]
+    return null unless obj?
+    if obj.constructor is Function then obj() else obj
 
-  pipeline: ->
-    if @options.pipeline?
-      @options.pipeline()
-    else
-      null
-
-  tasks: ->
-    if @options.tasks? and @options.tasks.constructor is Function
-      @options.tasks()
-    else
-      null
+  select: ->
+    @get('select').map (filename) -> filename: filename, source: read filename
 
   run: ->
-    tasks = @tasks()
+
+    # Run all pre-tasks
+    tasks = @get 'tasks'
     if tasks?
       for taskname in tasks
         @cakebox.tasks[taskname].run()
-    items = @items()
-    return unless items?
+
     @cakebox.log "Run task: #{@name.green}"
+
+    items = @select()
+    return if items is null
+
+    pipeline = @get 'pipeline'
+    throw "Function pipeline expected for Task #{@name}" unless pipeline?
     # pipeline each item through the pipeline
-    for fn in @pipeline()
+    for fn in pipeline
       items = items.map( (item) -> Object.assign(item, fn.call(item)) )
 
 
@@ -65,7 +63,7 @@ module.exports = class Task
     sleep = (ms) -> new Promise((resolve) -> setTimeout(resolve, ms))
     interval = 5 * 1000 # time to wait, in ms --> this loop is used to detect new files / removal of old ones
     loop # this loop runs every interval ms and watches
-      items = @items()
+      items = @select()
       for item in items
         fs.watchFile item.filename, (curr,prev) =>
           @run()

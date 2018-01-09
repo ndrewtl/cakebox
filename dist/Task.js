@@ -23,53 +23,53 @@
       this.updated = null;
     }
 
-    items() {
-      if (this.options.select != null) {
-        return this.options.select().map(function(filename) {
-          return {
-            filename: filename,
-            source: read(filename)
-          };
-        });
-      } else {
+    // function to get the value of the specified key
+    // if the key is undefined or null, return null
+    // if it's a function, invoke it. If not, return it as-is
+    get(key) {
+      var obj;
+      obj = this.options[key];
+      if (obj == null) {
         return null;
+      }
+      if (obj.constructor === Function) {
+        return obj();
+      } else {
+        return obj;
       }
     }
 
-    pipeline() {
-      if (this.options.pipeline != null) {
-        return this.options.pipeline();
-      } else {
-        return null;
-      }
-    }
-
-    tasks() {
-      if ((this.options.tasks != null) && this.options.tasks.constructor === Function) {
-        return this.options.tasks();
-      } else {
-        return null;
-      }
+    select() {
+      return this.get('select').map(function(filename) {
+        return {
+          filename: filename,
+          source: read(filename)
+        };
+      });
     }
 
     run() {
-      var fn, i, items, j, len, len1, ref, taskname, tasks;
-      tasks = this.tasks();
+      var fn, i, items, j, len, len1, pipeline, taskname, tasks;
+      // Run all pre-tasks
+      tasks = this.get('tasks');
       if (tasks != null) {
         for (i = 0, len = tasks.length; i < len; i++) {
           taskname = tasks[i];
           this.cakebox.tasks[taskname].run();
         }
       }
-      items = this.items();
-      if (items == null) {
+      this.cakebox.log(`Run task: ${this.name.green}`);
+      items = this.select();
+      if (items === null) {
         return;
       }
-      this.cakebox.log(`Run task: ${this.name.green}`);
-      ref = this.pipeline();
+      pipeline = this.get('pipeline');
+      if (pipeline == null) {
+        throw `Function pipeline expected for Task ${this.name}`;
+      }
       // pipeline each item through the pipeline
-      for (j = 0, len1 = ref.length; j < len1; j++) {
-        fn = ref[j];
+      for (j = 0, len1 = pipeline.length; j < len1; j++) {
+        fn = pipeline[j];
         items = items.map(function(item) {
           return Object.assign(item, fn.call(item));
         });
@@ -107,7 +107,7 @@
       // this loop runs every interval ms and watches
       results = [];
       while (true) {
-        items = this.items();
+        items = this.select();
         for (i = 0, len = items.length; i < len; i++) {
           item = items[i];
           fs.watchFile(item.filename, (curr, prev) => {
