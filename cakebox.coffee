@@ -5,7 +5,7 @@ glob   = require 'glob'
 module.exports =
   'coffee':
     select: -> glob.sync './src/**/*.coffee'
-    transform: -> [
+    pipeline: -> [
       -> # Get dir and name values to use later
         {dir, name} = path.parse @filename
          # All the output goes in the dist directory
@@ -17,4 +17,4 @@ module.exports =
           source: path.join(@dir,@name) + '.js'
     ]
   'default':
-    first: -> ['coffee']
+    tasks: -> ['coffee']
