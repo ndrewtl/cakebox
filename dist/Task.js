@@ -1,5 +1,5 @@
 (function() {
-  var Task, colors, exists, fs, mkdir, path, read, write;
+  var Task, colors, exists, fs, mkdirp, path, read, write;
 
   fs = require('fs');
 
@@ -7,7 +7,7 @@
 
   path = require('path');
 
-  mkdir = require('mkdirp');
+  mkdirp = require('mkdirp');
 
   // Helper methods to read and write from files
   read = function(filename) {

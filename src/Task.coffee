@@ -1,7 +1,7 @@
 fs     = require 'fs'
 colors = require 'colors'
 path   = require 'path'
-mkdir  = require 'mkdirp'
+mkdirp  = require 'mkdirp'
 
 # Helper methods to read and write from files
 read  = (filename) -> fs.readFileSync(filename).toString()
