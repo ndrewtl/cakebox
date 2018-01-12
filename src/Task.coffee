@@ -8,10 +8,11 @@ write = (filename,data) -> fs.writeFileSync(filename,data)
 module.exports = class Task
   constructor: (options) ->
     @options  = options
+    # @options expected parameters: files, tasks, pipe
     @name = options.name
     @cakebox = options.cakebox
     @output = null
-    @updated = null
+    @timestamp = null
 
   # function to get the value of the specified key
   # if the key is undefined or null, return null
@@ -20,13 +21,6 @@ module.exports = class Task
     obj = @options[key]
     return null unless obj?
     if obj.constructor is Function then obj() else obj
-
-  items: ->
-    files = @get 'files'
-    if files
-      files.map (filename) -> filename: filename, source: read filename
-    else
-      null
 
   run: ->
 
@@ -39,24 +33,24 @@ module.exports = class Task
         @cakebox.tasks[taskname].run()
 
 
-    items = @items()
-    return if items is null
-
-    pipeline = @get 'pipeline'
-    throw "Function pipeline expected for Task #{@name}" unless pipeline?
-    # pipeline each item through the pipeline
-    for fn in pipeline
-      items = items.map( (item) -> Object.assign(item, fn.call(item)) )
+    files = @get 'files'
+    if files?
+      items = files.map (filename) -> filename: filename, source: read filename
+      pipe = @get 'pipe'
+      throw "Function pipe expected for Task #{@name}" unless pipe?
+      # pipe each item through the pipeline
+      for fn in pipe
+        items = items.map( (item) -> Object.assign(item, fn.call(item)) )
+      @output = items
+      @write()
 
 
     # Update data on this task
-    @output = items
-    @updated = new Date()
-
-    @save()
+    @timestamp = new Date()
 
 
-  save: ->
+
+  write: ->
     for item in @output
       for name, dest of item.destination
         @cakebox.log "#{@name.green}: Writing to #{dest.yellow}"

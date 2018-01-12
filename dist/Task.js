@@ -17,10 +17,11 @@
   module.exports = Task = class Task {
     constructor(options) {
       this.options = options;
+      // @options expected parameters: files, tasks, pipe
       this.name = options.name;
       this.cakebox = options.cakebox;
       this.output = null;
-      this.updated = null;
+      this.timestamp = null;
     }
 
     // function to get the value of the specified key
@@ -39,23 +40,8 @@
       }
     }
 
-    items() {
-      var files;
-      files = this.get('files');
-      if (files) {
-        return files.map(function(filename) {
-          return {
-            filename: filename,
-            source: read(filename)
-          };
-        });
-      } else {
-        return null;
-      }
-    }
-
     run() {
-      var fn, i, items, j, len, len1, pipeline, taskname, tasks;
+      var files, fn, i, items, j, len, len1, pipe, taskname, tasks;
       this.cakebox.log(`Run task: ${this.name.green}`);
       // Run all pre-tasks
       tasks = this.get('tasks');
@@ -65,28 +51,33 @@
           this.cakebox.tasks[taskname].run();
         }
       }
-      items = this.items();
-      if (items === null) {
-        return;
-      }
-      pipeline = this.get('pipeline');
-      if (pipeline == null) {
-        throw `Function pipeline expected for Task ${this.name}`;
-      }
-      // pipeline each item through the pipeline
-      for (j = 0, len1 = pipeline.length; j < len1; j++) {
-        fn = pipeline[j];
-        items = items.map(function(item) {
-          return Object.assign(item, fn.call(item));
+      files = this.get('files');
+      if (files != null) {
+        items = files.map(function(filename) {
+          return {
+            filename: filename,
+            source: read(filename)
+          };
         });
+        pipe = this.get('pipe');
+        if (pipe == null) {
+          throw `Function pipe expected for Task ${this.name}`;
+        }
+        // pipe each item through the pipeline
+        for (j = 0, len1 = pipe.length; j < len1; j++) {
+          fn = pipe[j];
+          items = items.map(function(item) {
+            return Object.assign(item, fn.call(item));
+          });
+        }
+        this.output = items;
+        this.write();
       }
       // Update data on this task
-      this.output = items;
-      this.updated = new Date();
-      return this.save();
+      return this.timestamp = new Date();
     }
 
-    save() {
+    write() {
       var dest, i, item, len, name, ref, ref1;
       ref = this.output;
       for (i = 0, len = ref.length; i < len; i++) {

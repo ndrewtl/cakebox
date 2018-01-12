@@ -5,7 +5,7 @@ glob   = require 'glob'
 module.exports =
   'coffee':
     files: -> glob.sync './src/**/*.coffee'
-    pipeline: [
+    pipe: [
       -> # Get dir and name values to use later
         {dir, name} = path.parse @filename
          # All the output goes in the dist directory
