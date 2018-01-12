@@ -40,16 +40,23 @@
     }
 
     items() {
-      return this.get('files').map(function(filename) {
-        return {
-          filename: filename,
-          source: read(filename)
-        };
-      });
+      var files;
+      files = this.get('files');
+      if (files) {
+        return files.map(function(filename) {
+          return {
+            filename: filename,
+            source: read(filename)
+          };
+        });
+      } else {
+        return null;
+      }
     }
 
     run() {
       var fn, i, items, j, len, len1, pipeline, taskname, tasks;
+      this.cakebox.log(`Run task: ${this.name.green}`);
       // Run all pre-tasks
       tasks = this.get('tasks');
       if (tasks != null) {
@@ -58,7 +65,6 @@
           this.cakebox.tasks[taskname].run();
         }
       }
-      this.cakebox.log(`Run task: ${this.name.green}`);
       items = this.items();
       if (items === null) {
         return;

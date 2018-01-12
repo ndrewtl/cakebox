@@ -16,5 +16,7 @@ module.exports =
         destination:
           source: path.join(@dir,@name) + '.js'
     ]
-  'default':
+  'build' :
     tasks: ['coffee']
+  'default':
+    tasks: ['build']

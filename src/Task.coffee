@@ -22,9 +22,15 @@ module.exports = class Task
     if obj.constructor is Function then obj() else obj
 
   items: ->
-    @get('files').map (filename) -> filename: filename, source: read filename
+    files = @get 'files'
+    if files
+      files.map (filename) -> filename: filename, source: read filename
+    else
+      null
 
   run: ->
+
+    @cakebox.log "Run task: #{@name.green}"
 
     # Run all pre-tasks
     tasks = @get 'tasks'
@@ -32,7 +38,6 @@ module.exports = class Task
       for taskname in tasks
         @cakebox.tasks[taskname].run()
 
-    @cakebox.log "Run task: #{@name.green}"
 
     items = @items()
     return if items is null
