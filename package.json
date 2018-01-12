@@ -1,5 +1,5 @@
 {
-  "name": "@andrewtl/cakebox",
+  "name": "cakebox",
   "version": "0.1.0",
   "bin": {
     "cakebox": "bin/cakebox"

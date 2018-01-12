@@ -11,7 +11,7 @@ Bring your own modules and build your project how you'd like.
 
 ## Installation
 ```zsh
-$ yarn add @andrewtl/cakebox --dev
+$ yarn add cakebox --dev
 ```
 
 ## Use
