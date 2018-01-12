@@ -1,16 +1,29 @@
 (function() {
-  var Task, colors, fs, read, write;
+  var Task, colors, exists, fs, mkdir, path, read, write;
 
   fs = require('fs');
 
   colors = require('colors');
+
+  path = require('path');
+
+  mkdir = require('mkdirp');
 
   // Helper methods to read and write from files
   read = function(filename) {
     return fs.readFileSync(filename).toString();
   };
 
+  exists = function(filename) {
+    return fs.existsSync(path.resolve(filename));
+  };
+
   write = function(filename, data) {
+    var dir;
+    dir = path.dirname(filename);
+    if (!fs.existsSync(dir)) {
+      mkdirp.sync(dir);
+    }
     return fs.writeFileSync(filename, data);
   };
 

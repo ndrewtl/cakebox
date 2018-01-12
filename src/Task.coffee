@@ -1,9 +1,16 @@
 fs     = require 'fs'
 colors = require 'colors'
+path   = require 'path'
+mkdir  = require 'mkdirp'
 
 # Helper methods to read and write from files
 read  = (filename) -> fs.readFileSync(filename).toString()
-write = (filename,data) -> fs.writeFileSync(filename,data)
+exists = (filename) -> fs.existsSync path.resolve filename
+write = (filename,data) ->
+  dir = path.dirname(filename)
+  unless fs.existsSync dir
+    mkdirp.sync dir
+  fs.writeFileSync(filename,data)
 
 module.exports = class Task
   constructor: (options) ->
