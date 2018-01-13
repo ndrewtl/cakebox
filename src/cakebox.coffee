@@ -11,7 +11,7 @@ cakebox =
     filenames = ['cakebox','config','config.cakebox']
     for name in filenames
       if exists "#{name}.coffee" or exists "#{name}.js"
-        config = require "../#{name}"
+        config = require path.join(dir,name)
         break
     throw "No config file found for directory #{dir}" unless config?
     @load(config)

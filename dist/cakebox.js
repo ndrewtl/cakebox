@@ -20,7 +20,7 @@
       for (i = 0, len = filenames.length; i < len; i++) {
         name = filenames[i];
         if (exists(`${name}.coffee` || exists(`${name}.js`))) {
-          config = require(`../${name}`);
+          config = require(path.join(dir, name));
           break;
         }
       }
