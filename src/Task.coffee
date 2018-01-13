@@ -34,22 +34,19 @@ module.exports = class Task
     @cakebox.log "Run task: #{@name.green}"
 
     # Run all pre-tasks
-    tasks = @get 'tasks'
-    if tasks?
-      for taskname in tasks
-        @cakebox.tasks[taskname].run()
+    tasks = @get('tasks') || []
+    for taskname in tasks
+      @cakebox.tasks[taskname].run()
 
 
-    files = @get 'files'
-    if files?
-      items = files.map (filename) -> filename: filename, source: read filename
-      pipe = @get 'pipe'
-      throw "Function pipe expected for Task #{@name}" unless pipe?
-      # pipe each item through the pipeline
-      for fn in pipe
-        items = items.map( (item) -> Object.assign(item, fn.call(item)) )
-      @output = items
-      @write()
+    files = @get('files') || []
+    items = files.map (filename) -> filename: filename, source: read filename
+    pipe = @get('pipe') || []
+    # pipe each item through the pipeline
+    for fn in pipe
+      items = items.map( (item) -> Object.assign(item, fn.call(item)) )
+    @output = items
+    @write()
 
 
     # Update data on this task
@@ -58,6 +55,7 @@ module.exports = class Task
 
 
   write: ->
+    throw "Nothing to write!" unless @output?
     for item in @output
       for name, dest of item.destination
         @cakebox.log "#{@name.green}: Writing to #{dest.yellow}"
@@ -65,6 +63,11 @@ module.exports = class Task
     this
 
   watch: ->
+
+    tasks = @get('tasks') || []
+    for task in tasks
+      @cakebox.tasks[task].watch()
+
     #  sleep function
     sleep = (ms) -> new Promise((resolve) -> setTimeout(resolve, ms))
     interval = 5 * 1000 # time to wait, in ms --> this loop is used to detect new files / removal of old ones
@@ -75,7 +78,7 @@ module.exports = class Task
         return false unless arr2.includes elt
       true
     # Init files to use
-    current = @get 'files'
+    current = @get('files') || []
 
     # Watch all those files
     for filename in current
@@ -83,7 +86,7 @@ module.exports = class Task
 
     loop # this loop runs every interval ms and watches for new/removed files
       await sleep interval
-      updated = @get 'files' # update our file listing
+      updated = @get('files') || [] # update our file listing
       # If the listing isn't the same...
       unless sameContents updated, current
         @run() # rebuild

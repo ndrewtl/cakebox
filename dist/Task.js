@@ -57,41 +57,37 @@
       var files, fn, i, items, j, len, len1, pipe, taskname, tasks;
       this.cakebox.log(`Run task: ${this.name.green}`);
       // Run all pre-tasks
-      tasks = this.get('tasks');
-      if (tasks != null) {
-        for (i = 0, len = tasks.length; i < len; i++) {
-          taskname = tasks[i];
-          this.cakebox.tasks[taskname].run();
-        }
+      tasks = this.get('tasks') || [];
+      for (i = 0, len = tasks.length; i < len; i++) {
+        taskname = tasks[i];
+        this.cakebox.tasks[taskname].run();
       }
-      files = this.get('files');
-      if (files != null) {
-        items = files.map(function(filename) {
-          return {
-            filename: filename,
-            source: read(filename)
-          };
+      files = this.get('files') || [];
+      items = files.map(function(filename) {
+        return {
+          filename: filename,
+          source: read(filename)
+        };
+      });
+      pipe = this.get('pipe') || [];
+      // pipe each item through the pipeline
+      for (j = 0, len1 = pipe.length; j < len1; j++) {
+        fn = pipe[j];
+        items = items.map(function(item) {
+          return Object.assign(item, fn.call(item));
         });
-        pipe = this.get('pipe');
-        if (pipe == null) {
-          throw `Function pipe expected for Task ${this.name}`;
-        }
-        // pipe each item through the pipeline
-        for (j = 0, len1 = pipe.length; j < len1; j++) {
-          fn = pipe[j];
-          items = items.map(function(item) {
-            return Object.assign(item, fn.call(item));
-          });
-        }
-        this.output = items;
-        this.write();
       }
+      this.output = items;
+      this.write();
       // Update data on this task
       return this.timestamp = new Date();
     }
 
     write() {
       var dest, i, item, len, name, ref, ref1;
+      if (this.output == null) {
+        throw "Nothing to write!";
+      }
       ref = this.output;
       for (i = 0, len = ref.length; i < len; i++) {
         item = ref[i];
@@ -106,7 +102,12 @@
     }
 
     async watch() {
-      var current, filename, i, interval, j, k, len, len1, len2, results, sameContents, sleep, updated;
+      var current, filename, i, interval, j, k, l, len, len1, len2, len3, results, sameContents, sleep, task, tasks, updated;
+      tasks = this.get('tasks') || [];
+      for (i = 0, len = tasks.length; i < len; i++) {
+        task = tasks[i];
+        this.cakebox.tasks[task].watch();
+      }
       //  sleep function
       sleep = function(ms) {
         return new Promise(function(resolve) {
@@ -116,12 +117,12 @@
       interval = 5 * 1000; // time to wait, in ms --> this loop is used to detect new files / removal of old ones
       // utility to check if two arrays have the same contents, not necessarily in the same order
       sameContents = function(arr1, arr2) {
-        var elt, i, len;
+        var elt, j, len1;
         if (arr1.length !== arr2.length) {
           return false;
         }
-        for (i = 0, len = arr1.length; i < len; i++) {
-          elt = arr1[i];
+        for (j = 0, len1 = arr1.length; j < len1; j++) {
+          elt = arr1[j];
           if (!arr2.includes(elt)) {
             return false;
           }
@@ -129,10 +130,10 @@
         return true;
       };
       // Init files to use
-      current = this.get('files');
+      current = this.get('files') || [];
       // Watch all those files
-      for (i = 0, len = current.length; i < len; i++) {
-        filename = current[i];
+      for (j = 0, len1 = current.length; j < len1; j++) {
+        filename = current[j];
         fs.watchFile(filename, (curr, prev) => {
           return this.run(); // this loop runs every interval ms and watches for new/removed files
         });
@@ -140,18 +141,18 @@
       results = [];
       while (true) {
         await sleep(interval);
-        updated = this.get('files'); // update our file listing
+        updated = this.get('files') || [];
         // If the listing isn't the same...
         if (!sameContents(updated, current)) {
           this.run(); // rebuild
           // remove all our listeners
-          for (j = 0, len1 = current.length; j < len1; j++) {
-            filename = current[j];
+          for (k = 0, len2 = current.length; k < len2; k++) {
+            filename = current[k];
             fs.unwatchFile(filename);
           }
           // re-add new listeners
-          for (k = 0, len2 = updated.length; k < len2; k++) {
-            filename = updated[k];
+          for (l = 0, len3 = updated.length; l < len3; l++) {
+            filename = updated[l];
             fs.watchFile(filename, () => {
               return this.run();
             });
